@@ -1,0 +1,13 @@
+#nush
+*.pdb
+*.tlog
+*.db
+*.vsidx
+*.ipch
+/Release
+/.vs
+/.vscode
+
+*.out
+*.exe
+OpenGL-Base
