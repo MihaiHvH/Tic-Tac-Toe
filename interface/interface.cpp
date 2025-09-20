@@ -3,15 +3,23 @@
 #include <random>
 
 pInterface::pInterface() {
-    //matrix[1][0] = 2;
-    //matrix[2][0] = 1;
 }
 
 pInterface::~pInterface() {
+}
 
+void pInterface::drawSettings() {
+    settings = !settings;
+    screen.render();
+    if (!settings) {
+        resetGame();
+        if (AI) handleClick();
+    }
 }
 
 void pInterface::draw() {
+    if (settings) return;
+
     for (int i = 1; i <= 2; ++i) {
         graphics.drawRect(std::make_pair(i * screen.size.first / 3.f, 0), std::make_pair(5, screen.size.second), graphics.black);
         graphics.drawRect(std::make_pair(0, i * screen.size.second / 3.f), std::make_pair(screen.size.first, 5), graphics.black);
@@ -29,7 +37,7 @@ void pInterface::draw() {
                 points[0] = std::make_pair((i + 1) * screen.size.first / 3.f - 5, (j == 0) ? 5 : 10 + j * screen.size.second / 3.f);
                 points[1] = std::make_pair((i + 1) * screen.size.first / 3.f - 20, (j == 0) ? 5 : 10 + j * screen.size.second / 3.f);
                 points[2] = std::make_pair((i == 0) ? 5 : 10 + i * screen.size.first / 3.f, (j + 1) * screen.size.second / 3.f - 5);
-                points[3] = std::make_pair((i == 0) ? 20 : 25 + i * screen.size.first / 3.f, (j + 1) * screen.size.second / 3.f - 5);                
+                points[3] = std::make_pair((i == 0) ? 20 : 25 + i * screen.size.first / 3.f, (j + 1) * screen.size.second / 3.f - 5);
                 graphics.draw4PointRect(points, graphics.red);
             }
             else if (matrix[j][i] == 2) {
@@ -47,31 +55,32 @@ std::pair<int, int> pInterface::getCursorPos() {
     return std::make_pair(screen.mousePointer.second / (screen.size.second / 3), screen.mousePointer.first / (screen.size.first / 3));
 }
 
+void pInterface::resetGame() {
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            matrix[i][j] = 0;
+    state = 0;
+    turn = 0;
+    firstTurn = 1;
+    screen.render();
+}
+
 void pInterface::handleClick() {
-    if (state != 0) {
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j)
-                matrix[i][j] = 0;
-        state = 0;
-        turn = 0;
-        firstTurn = 1;
-        screen.render();
-    }
+    if (settings) return;
 
+    if (state != 0) resetGame();
     std::pair<int, int> pos = getCursorPos();
-
-    //printf("%d, %d\n", pos.first, pos.second);
     if (!AI) {
         if (matrix[pos.first][pos.second] == 0 && state == 0) {
             matrix[pos.first][pos.second] = turn + 1;
             turn = !turn;
             screen.render();
-            detectState();
+            detectState(true);
         }
     }
     else {
         if (!turn && state == 0) { // AI
-            if (AIrandomX && firstTurn) {
+            if (AIRandomX && firstTurn) {
                 generateRandomStartX();
                 firstTurn = false;
                 turn = !turn;
@@ -165,4 +174,24 @@ void pInterface::generateRandomStartX() {
     std::mt19937 mt(rd());
     std::uniform_int_distribution<int> dist(0, 2);
     matrix[dist(mt)][dist(mt)] = 1;
+}
+
+void pInterface::drawLine(int i, int j, bool diag) {
+    if (diag) {
+        if (i == 0 && j == 2) {
+            std::pair<double, double> points[4] = {
+                std::make_pair(screen.size.first - 20, 5),
+                std::make_pair(screen.size.first - 5, 5),
+                std::make_pair(20, screen.size.second - 5),
+                std::make_pair(5, screen.size.second - 5)
+            };
+            graphics.draw4PointRect(points, graphics.cyan);
+        }
+        else {
+
+        }
+    }
+    else {
+
+    }
 }

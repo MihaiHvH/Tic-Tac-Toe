@@ -26,4 +26,5 @@ class pGraphics::pButon : public pGraphics {
     void checkClick();
     void updatePos(std::pair<double, double> pPos);
     void updateSize(std::pair<double, double> pSize);
+    void updateText(std::string pText);
 };

@@ -41,3 +41,7 @@ void pGraphics::pButon::updatePos(std::pair<double, double> pPos) {
 void pGraphics::pButon::updateSize(std::pair<double, double> pSize) {
     size = pSize;
 }
+
+void pGraphics::pButon::updateText(std::string pText) {
+    text = pText;
+}

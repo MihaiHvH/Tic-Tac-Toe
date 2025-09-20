@@ -14,12 +14,17 @@ class pInterface {
     int state = 0; // 0 - continue; 1 - win X; 2 - win 0; 3 - tie
 
     bool AI = true;
-    bool AIrandomX = true;
+    bool AIRandomX = true;
 
+    bool settings = false;
+
+    void drawSettings();
     void draw();
+    void drawLine(int i, int j, bool diag = false);
     
     std::pair<int, int> getCursorPos();
 
+    void resetGame();
     void handleClick();
     void detectState(bool showOutput = false);
 
