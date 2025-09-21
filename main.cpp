@@ -5,15 +5,22 @@ pInterface interface;
 
 void render();
 
-pGraphics::pButon AIBtn(std::make_pair(50, 50), std::make_pair(100, 20), interface.AI ? interface.graphics.blue : interface.graphics.red, interface.AI ? interface.graphics.red : interface.graphics.blue, GLUT_BITMAP_HELVETICA_18, interface.graphics.black, interface.AI ? "AI: ON" : "AI: OFF", [](bool state) {
+pGraphics::pButon AIBtn({ 50, 50 }, { 100, 20 }, interface.AI ? interface.graphics.blue : interface.graphics.red, interface.AI ? interface.graphics.red : interface.graphics.blue, GLUT_BITMAP_HELVETICA_18, interface.graphics.black, interface.AI ? "AI: ON" : "AI: OFF", [](bool state) {
     interface.AI = !interface.AI;
     AIBtn.updateText(interface.AI ? "AI: ON" : "AI: OFF");
     render();
 });
 
-pGraphics::pButon AIRandomXBtn(std::make_pair(50, 50), std::make_pair(100, 20), interface.AIRandomX ? interface.graphics.blue : interface.graphics.red, interface.AIRandomX ? interface.graphics.red : interface.graphics.blue, GLUT_BITMAP_HELVETICA_18, interface.graphics.black, interface.AIRandomX ? "AI Random X: ON" : "AI Random X: OFF", [](bool state) {
-    interface.AIRandomX = !interface.AIRandomX;
-    AIRandomXBtn.updateText(interface.AIRandomX ? "AI Random X: ON" : "AI Random X: OFF");
+pGraphics::pButon AIRandomStartBtn({ 50, 50 }, { 100, 20 }, interface.AIRandomStart ? interface.graphics.blue : interface.graphics.red, interface.AIRandomStart ? interface.graphics.red : interface.graphics.blue, GLUT_BITMAP_HELVETICA_18, interface.graphics.black, interface.AIRandomStart ? "AI Random Start: ON" : "AI Random Start: OFF", [](bool state) {
+    interface.AIRandomStart = !interface.AIRandomStart;
+    AIRandomStartBtn.updateText(interface.AIRandomStart ? "AI Random Start: ON" : "AI Random Start: OFF");
+    render();
+});
+
+pGraphics::pButon AIXor0Btn({ 50, 50 }, { 100, 20 }, interface.AIXor0 ? interface.graphics.cyan : interface.graphics.purple, interface.AIXor0 ? interface.graphics.purple : interface.graphics.cyan, GLUT_BITMAP_HELVETICA_18, interface.graphics.black, interface.AIXor0 ? "AI: 0" : "AI: X", [](bool state) {
+    interface.AIXor0 = !interface.AIXor0;
+    interface.turn = interface.AIXor0;
+    AIXor0Btn.updateText(interface.AIXor0 ? "AI: 0" : "AI: X");
     render();
 });
 
@@ -23,16 +30,24 @@ void render() {
 
     interface.draw();
     if (interface.settings) {
-        std::pair<double, double> size = std::make_pair(screen.size.first / 3.5f, screen.size.second / 10.f);
-        AIBtn.updatePos(std::make_pair(screen.size.first / 2.f - size.first / 2.f, (screen.size.second - size.second) / 2.f - size.second / 1.5f));
+        std::pair<double, double> size = { screen.size.first / 3.25f, screen.size.second / 10.f };
+        
+        AIBtn.updatePos({ screen.size.first / 2.f - size.first / 2.f, (screen.size.second - size.second) / 2.f - 2 * size.second / 1.5f });
         AIBtn.updateSize(size);
         AIBtn.draw();
 
-        AIRandomXBtn.updatePos(std::make_pair((screen.size.first - size.first) / 2.f, (screen.size.second - size.second) / 2.f + size.second / 1.5f));
-        AIRandomXBtn.updateSize(size);
-        AIRandomXBtn.draw();
+        AIRandomStartBtn.updatePos({ (screen.size.first - size.first) / 2.f, (screen.size.second - size.second) / 2.f });
+        AIRandomStartBtn.updateSize(size);
+        AIRandomStartBtn.draw();
+
+        AIXor0Btn.updatePos({ (screen.size.first - size.first) / 2.f, (screen.size.second - size.second) / 2.f + size.second + (size.second - size.second / 1.5f) });
+        AIXor0Btn.updateSize(size);
+        AIXor0Btn.draw();
+
+        std::pair<int, int> tSize = interface.graphics.getTextSize("Press ESC to start", GLUT_BITMAP_HELVETICA_18);
+        
+        interface.graphics.drawText({ (screen.size.first - tSize.first) / 2.f, (screen.size.second - size.second) / 2.f - 2 * size.second / 1.5 - tSize.second / 2.f }, GLUT_BITMAP_HELVETICA_18, "Press ESC to start", interface.graphics.black);
     }
-    //interface.drawLine(0, 2, true);
     glutSwapBuffers();
 }
 
@@ -62,7 +77,8 @@ void handleMouseKeys(int button, int state, int x, int y) {
 
             if (interface.settings) {
                 AIBtn.checkClick();
-                AIRandomXBtn.checkClick();
+                AIRandomStartBtn.checkClick();
+                AIXor0Btn.checkClick();
             }
 
             if (state != GLUT_DOWN)
@@ -98,7 +114,7 @@ void handleIdle() {
 
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
-    glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitDisplayMode ( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 
     glutInitWindowPosition(100,100);
     glutInitWindowSize(screen.initialSize.first, screen.initialSize.second);
@@ -111,10 +127,7 @@ int main(int argc, char **argv) {
     glClearColor(1.0, 1.0, 1.0, 1.0);
     
     screen.render = render;
-    
     interface.drawSettings();
-
-    //if (interface.AI) interface.handleClick();
 
     glutDisplayFunc(render);
     glutKeyboardFunc(processInput);
