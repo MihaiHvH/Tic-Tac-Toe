@@ -11,12 +11,6 @@ pGraphics::pButon AIBtn({ 50, 50 }, { 100, 20 }, interface.AI ? interface.graphi
     render();
 });
 
-pGraphics::pButon AIRandomStartBtn({ 50, 50 }, { 100, 20 }, interface.AIRandomStart ? interface.graphics.blue : interface.graphics.red, interface.AIRandomStart ? interface.graphics.red : interface.graphics.blue, GLUT_BITMAP_HELVETICA_18, interface.graphics.black, interface.AIRandomStart ? "AI Random Start: ON" : "AI Random Start: OFF", [](bool state) {
-    interface.AIRandomStart = !interface.AIRandomStart;
-    AIRandomStartBtn.updateText(interface.AIRandomStart ? "AI Random Start: ON" : "AI Random Start: OFF");
-    render();
-});
-
 pGraphics::pButon AIXor0Btn({ 50, 50 }, { 100, 20 }, interface.AIXor0 ? interface.graphics.cyan : interface.graphics.purple, interface.AIXor0 ? interface.graphics.purple : interface.graphics.cyan, GLUT_BITMAP_HELVETICA_18, interface.graphics.black, interface.AIXor0 ? "AI: 0" : "AI: X", [](bool state) {
     interface.AIXor0 = !interface.AIXor0;
     interface.turn = interface.AIXor0;
@@ -24,11 +18,17 @@ pGraphics::pButon AIXor0Btn({ 50, 50 }, { 100, 20 }, interface.AIXor0 ? interfac
     render();
 });
 
+pGraphics::pMultipleChoiceButon AIDifficultyBtn({ 50, 50 }, { 100, 20 }, { interface.graphics.green, interface.graphics.yellow, interface.graphics.red }, GLUT_BITMAP_HELVETICA_18, interface.graphics.black, "Difficulty: Easy", [](int choice) {
+    AIDifficultyBtn.updateText((choice == 0) ? "Difficulty: Easy" : (choice == 1) ? "Difficulty: Hard" : "Difficulty: Impossible");
+    interface.AIDifficulty = choice;
+    render();
+});
+
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_TEXTURE_2D);
 
-    interface.draw();
+    interface.drawGrid();
     if (interface.settings) {
         std::pair<double, double> size = { screen.size.first / 3.25f, screen.size.second / 10.f };
         
@@ -36,14 +36,15 @@ void render() {
         AIBtn.updateSize(size);
         AIBtn.draw();
 
-        AIRandomStartBtn.updatePos({ (screen.size.first - size.first) / 2.f, (screen.size.second - size.second) / 2.f });
-        AIRandomStartBtn.updateSize(size);
-        AIRandomStartBtn.draw();
-
-        AIXor0Btn.updatePos({ (screen.size.first - size.first) / 2.f, (screen.size.second - size.second) / 2.f + size.second + (size.second - size.second / 1.5f) });
-        AIXor0Btn.updateSize(size);
-        AIXor0Btn.draw();
-
+        if (interface.AI) {
+            AIXor0Btn.updatePos({ (screen.size.first - size.first) / 2.f, (screen.size.second - size.second) / 2.f });
+            AIXor0Btn.updateSize(size);
+            AIXor0Btn.draw();
+            
+            AIDifficultyBtn.updatePos({ (screen.size.first - size.first) / 2.f, (screen.size.second - size.second) / 2.f + size.second + (size.second - size.second / 1.5f) });
+            AIDifficultyBtn.updateSize(size);
+            AIDifficultyBtn.draw();
+        }
         std::pair<int, int> tSize = interface.graphics.getTextSize("Press ESC to start", GLUT_BITMAP_HELVETICA_18);
         
         interface.graphics.drawText({ (screen.size.first - tSize.first) / 2.f, (screen.size.second - size.second) / 2.f - 2 * size.second / 1.5 - tSize.second / 2.f }, GLUT_BITMAP_HELVETICA_18, "Press ESC to start", interface.graphics.black);
@@ -77,8 +78,8 @@ void handleMouseKeys(int button, int state, int x, int y) {
 
             if (interface.settings) {
                 AIBtn.checkClick();
-                AIRandomStartBtn.checkClick();
                 AIXor0Btn.checkClick();
+                AIDifficultyBtn.checkClick();
             }
 
             if (state != GLUT_DOWN)

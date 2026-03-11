@@ -31,3 +31,4 @@
 #include "graphics/checkBox/checkBox.hpp"
 #include "graphics/image/image.hpp"
 #include "graphics/slider/slider.hpp"
+#include "graphics/multipleChoiceButon/multipleChoiceButon.hpp"

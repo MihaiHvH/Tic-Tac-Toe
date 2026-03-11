@@ -14,6 +14,7 @@ class pGraphics {
     class pCheckBox;
     class pImage;
     class pSlider;
+    class pMultipleChoiceButon;
 
     pColor white, black, red, green, blue, yellow, cyan, purple;
     

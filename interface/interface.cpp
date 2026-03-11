@@ -15,7 +15,7 @@ void pInterface::drawSettings() {
     }
 }
 
-void pInterface::draw() {
+void pInterface::drawGrid() {
     if (settings) return;
 
     for (int i = 1; i <= 2; ++i) {
@@ -53,8 +53,8 @@ void pInterface::resetGame() {
         for (int j = 0; j < 3; ++j)
             matrix[i][j] = 0, gold[i][j] = 0;
     state = 0;
-    turn = AIXor0;
-    firstTurn = 1;
+    turn = AI ? AIXor0 : false;
+    firstTurn = true;
     screen.render();
 }
 
@@ -63,70 +63,93 @@ void pInterface::handleClick() {
 
     if (state != 0) {
         resetGame();
-        if (AIXor0) return;
+        return;
     }
     std::pair<int, int> pos = getCursorPos();
     if (!AI) {
         if (matrix[pos.first][pos.second] == 0 && state == 0) {
             matrix[pos.first][pos.second] = turn + 1;
             turn = !turn;
-            screen.render();
             detectState(true);
         }
     }
     else {
         if (!turn && state == 0) { // AI
-            if (AIRandomStart && firstTurn) {
-                generateRandomStartPos();
-                firstTurn = false;
-                turn = !turn;
-                screen.render();
-                return;
-            }
-            int bestScore = INT_MIN;
-            std::pair<int, int> bestMove;
-            for (int i = 0; i < 3; ++i)
-                for (int j = 0; j < 3; ++j)
-                    if (matrix[i][j] == 0) {
-                        matrix[i][j] = AIXor0 + 1;
-                        int aux = state;
-                        int score = minimax(matrix, 0, false);
-                        state = aux;
-                        if (bestScore < score) {
-                            bestScore = score;
-                            bestMove = { i, j };
-                        }
-                        matrix[i][j] = 0;
-                    }
-            matrix[bestMove.first][bestMove.second] = AIXor0 + 1;
+            if (AIDifficulty == 0) AIEasy();
+            else if (AIDifficulty == 1) AIHard();
+            else if (AIDifficulty == 2) AIImpossible();
             turn = !turn;
-            screen.render();
             detectState(true);
         }
         else if (matrix[pos.first][pos.second] == 0) { // HUMAN
             matrix[pos.first][pos.second] = AIXor0 ? 1 : 2;
             turn = !turn;
-            screen.render();
             detectState(true);
-            if (state == 0) handleClick();
+            if (state == 0) handleClick(); // AI
         }
     }
 }
 
+void pInterface::AIEasy() {
+    if (chance(40)) AIImpossible();
+    else generateRandomMove();
+}
+
+void pInterface::AIHard() {
+    if (chance(90)) AIImpossible();
+    else generateRandomMove();
+}
+
+void pInterface::AIImpossible() {
+    if (firstTurn) {
+        firstTurn = !firstTurn;
+        if (matrix[1][1] == 0) {
+            matrix[1][1] = AIXor0 + 1;
+            screen.render();
+        }
+        else AIImpossible();
+        return;
+    }
+
+    int bestScore = INT_MIN;
+    std::pair<int, int> bestMove;
+    
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            if (matrix[i][j] == 0) {
+                matrix[i][j] = AIXor0 + 1;
+                int score = minimax(matrix, 0, false);
+                if (bestScore < score) {
+                    bestScore = score;
+                    bestMove = { i, j };
+                }
+                matrix[i][j] = 0;
+            }
+    matrix[bestMove.first][bestMove.second] = AIXor0 + 1;
+}
+
+int pInterface::chance(int percent) {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_int_distribution<int> dist(1, 100);
+    return dist(mt) <= percent;
+}
+
 int pInterface::minimax(int mat[3][3], int d, bool player) {
-    detectState();
-    if (state != 0) {
-        if (state == 1) return AIXor0 ? d - 10 : 10 - d;
-        if (state == 2) return AIXor0 ? 10 - d : d - 10;
+    int localState = detectLocalState(mat);
+    if (localState != 0) {
+        if (localState == 1) return AIXor0 ? d - 10 : 10 - d;
+        if (localState == 2) return AIXor0 ? 10 - d : d - 10;
         return 0;
     }
     int bestScore = player ? INT_MIN : INT_MAX;
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
         if (mat[i][j] == 0) {
-            mat[i][j] = AIXor0 + 1;
-            if (player) bestScore = std::max(minimax(mat, d + 1, false), bestScore);
-            else bestScore = std::min(minimax(mat, d + 1, true), bestScore);
+            mat[i][j] = player ? (AIXor0 + 1) : (AIXor0 ? 1 : 2);
+            int score = minimax(mat, d + 1, !player);
+            if (player) bestScore = std::max(score, bestScore);
+            else bestScore = std::min(score, bestScore);
             mat[i][j] = 0;
         }
     return bestScore;
@@ -134,6 +157,31 @@ int pInterface::minimax(int mat[3][3], int d, bool player) {
 
 bool pInterface::eq3(int a, int b, int c) {
     return a == b && b == c && a != 0;
+}
+
+int pInterface::detectLocalState(int mat[3][3]) {
+    int localState = 0;
+    for (int i = 0; i < 3 && !localState; ++i) {
+        if (eq3(mat[i][0], mat[i][1], mat[i][2]))
+            localState = mat[i][0];
+        if(eq3(mat[0][i], mat[1][i], mat[2][i]))
+            localState = mat[0][i];
+    }
+    if (!localState && (eq3(mat[0][0], mat[1][1], mat[2][2])))
+        localState = mat[1][1];
+    if (!localState && (eq3(mat[0][2], mat[1][1], mat[2][0])))
+        localState = mat[1][1];
+    if (!localState) {
+        bool ext = 0;
+        for (int i = 0; i < 3; ++i)
+            for (int j = 0; j < 3; ++j)
+                if (mat[i][j] == 0) {
+                    ext = 1;
+                    break;
+                }
+        if (!ext) localState = 3;
+    }
+    return localState;
 }
 
 void pInterface::detectState(bool showOutput) {
@@ -176,7 +224,7 @@ void pInterface::detectState(bool showOutput) {
     }
 }
 
-void pInterface::generateRandomStartPos() {
+void pInterface::generateRandomMove() {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_int_distribution<int> dist(0, 2);
