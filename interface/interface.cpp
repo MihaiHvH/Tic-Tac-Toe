@@ -63,7 +63,8 @@ void pInterface::handleClick() {
 
     if (state != 0) {
         resetGame();
-        return;
+        if (!AI) return;
+        else if (turn) return;
     }
     std::pair<int, int> pos = getCursorPos();
     if (!AI) {
