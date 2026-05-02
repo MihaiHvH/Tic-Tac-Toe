@@ -8,4 +8,4 @@ if [ -z "$name" ]; then
     name="Tic-Tac-Toe"
 fi
 
-g++ -I./include -L./lib $files -o $name -g -lGL -lglut -lIL -lGLU
+g++ -I./include -L./lib/linux $files -o $name -g -lGL -lglut -lIL -lGLU -lpng -ljpeg -ltiff

@@ -21,6 +21,8 @@
     #undef interface
 #endif
 
+#define IL_USE_PRAGMA_LIBS
+
 #include "include/GL/glut.h"
 
 #include "interface/interface.hpp"
